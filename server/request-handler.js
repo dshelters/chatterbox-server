@@ -68,26 +68,26 @@ var requestHandler = function(request, response) {
 
   var body = [];
 
-  request.on('error', function(err) {
-    console.error(err);
-  }).on('data', function(chunk) {
-    if (typeof chunk === 'object') {
-      console.log('----------------------------------------------------');
-      console.log('chunk', chunk);
-      console.log('typeof chunk', typeof chunk);
-      body.push(chunk);
-    }
-  }).on('end', function() {
+  // request.on('error', function(err) {
+  //   console.error(err);
+  // })
+  request.on('data', function(chunk) {
+    body.push(chunk);
+  });
+
+  console.log('body', body);
+
+  request.on('end', function() {
     if (body.length > 0) {
       var result = JSON.parse(Buffer.concat(body).toString());
       results.push(result);
     }
   });
-  console.log('body', body);
 
 
   //GET method
   if (request.method === 'GET' && url === '/classes/messages') {
+    console.log('statusCode NOW:', statusCode);
     response.writeHead(statusCode, headers);
     var responseBody = {
       headers: headers,
@@ -97,9 +97,21 @@ var requestHandler = function(request, response) {
     };
 
 
-    console.log('results', results);
-    console.log('----------------------------------------------------');
+    // console.log('results', results);
+    // console.log('----------------------------------------------------');
     response.write(JSON.stringify(responseBody));
+    response.end();
+    console.log('response.statuscode', JSON.stringify(responseBody).statusCode);
+  }
+
+  if (url !== '/classes/messages') {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+  if (request.method === 'OPTIONS' && url === '/classes/messages') {
+    response.writeHead(statusCode, headers);
     response.end();
   }
 
