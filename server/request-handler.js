@@ -5,7 +5,7 @@ var requestHandler = function(request, response) {
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'access-control-allow-headers': 'content-type, accept',
+    'access-control-allow-headers': 'content-type, accept, X-Parse-Application-Id, X-Parse-REST-API-Key',
     'access-control-max-age': 10 // Seconds.
   };
 
@@ -15,7 +15,7 @@ var requestHandler = function(request, response) {
   // declaring some variables
   var statusCode;
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'application/json';
+  headers['Content-Type'] = 'application/jsonp';
   var method = request.method;
   var url = request.url;
   var urlMatch = (url === '/classes/messages' || url === '/classes/room');
@@ -27,9 +27,6 @@ var requestHandler = function(request, response) {
     request.on('data', function(chunk) {
       body = body.concat(chunk.toString());
     });
-
-    console.log('body = ', body);
-
     request.on('end', function() {
       if (body.length > 0) {
         var result = JSON.parse(body);
@@ -37,15 +34,14 @@ var requestHandler = function(request, response) {
       }
     });
     response.writeHead(statusCode, headers);
-
-    response.end();
+    console.log('results', results);
+    response.end(JSON.stringify(results[results.length - 1]));
   }
 
 
   //GET method
   if (request.method === 'GET' && urlMatch) {
     statusCode = 200;
-    console.log('statusCode NOW:', statusCode);
     response.writeHead(statusCode, headers);
     var responseBody = {
       // headers: headers,
@@ -54,8 +50,6 @@ var requestHandler = function(request, response) {
       results: results
     };
     // response.write(JSON.stringify(responseBody));
-    console.log('----------------------------------------------------------');
-    console.log('response.statusCode = ', response.statusCode);
     response.end(JSON.stringify(responseBody));
   }
 
@@ -80,4 +74,3 @@ var requestHandler = function(request, response) {
 
 module.exports.requestHandler = requestHandler;
 
-// exports.myNameIs = function () { return 'slim shady'; };
