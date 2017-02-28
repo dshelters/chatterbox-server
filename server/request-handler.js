@@ -32,8 +32,8 @@ var requestHandler = function(request, response) {
 
     request.on('end', function() {
       if (body.length > 0) {
-        // var result = JSON.parse(Buffer.concat(body).toString());
-        results.push(body);
+        var result = JSON.parse(body);
+        results.push(result);
       }
     });
     response.writeHead(statusCode, headers);
