@@ -7,12 +7,15 @@
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
+
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
+
+
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -26,6 +29,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+
+var results = []; 
+
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -43,7 +49,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
+  
   // The outgoing status.
   var statusCode = 200;
 
@@ -54,7 +60,7 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
 
   var method = request.method;
 
@@ -65,15 +71,40 @@ var requestHandler = function(request, response) {
   request.on('error', function(err) {
     console.error(err);
   }).on('data', function(chunk) {
-    body.push(chunk);
+    if (typeof chunk === 'object') {
+      console.log('----------------------------------------------------');
+      console.log('chunk', chunk);
+      console.log('typeof chunk', typeof chunk);
+      body.push(chunk);
+    }
   }).on('end', function() {
-    body = Buffer.concat(body).toString();
+    if (body.length > 0) {
+      var result = JSON.parse(Buffer.concat(body).toString());
+      results.push(result);
+    }
   });
+  console.log('body', body);
 
+
+  //GET method
+  if (request.method === 'GET' && url === '/classes/messages') {
+    response.writeHead(statusCode, headers);
+    var responseBody = {
+      headers: headers,
+      method: method,
+      url: url,
+      results: results
+    };
+
+
+    console.log('results', results);
+    console.log('----------------------------------------------------');
+    response.write(JSON.stringify(responseBody));
+    response.end();
+  }
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -82,12 +113,21 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.write('<html>');
-  response.write('<body>');
-  response.write('<h1>Hello, World!</h1>');
-  response.write('</body>');
-  response.write('</html>');
-  response.end('Hello, World!');
+
+
+  //POST Method
+  if (request.method === 'POST' && url === '/classes/messages') {
+    statusCode = 201;
+    response.writeHead(statusCode, headers);
+    var responseBody = {
+      headers: headers,
+      method: method,
+      url: url,
+      results: results
+    };
+    response.end();
+  }
+
 };
 
 
