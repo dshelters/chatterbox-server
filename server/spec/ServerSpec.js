@@ -70,10 +70,7 @@ describe('Node Server Request Listener Function', function() {
     expect(res._responseCode).to.equal(201);
 
     // Testing for a newline isn't a valid test
-    // TODO: Replace with with a valid test
-    console.log('res._data', res._data);
-    console.log('-------------------------------------------------------');
-    console.log('res', res);
+    // TODO: Replace with with a valid test - check!
     expect(res._data).to.equal(JSON.stringify(stubMsg));
     expect(res._ended).to.equal(true);
   });
@@ -117,6 +114,71 @@ describe('Node Server Request Listener Function', function() {
       function() {
         expect(res._responseCode).to.equal(404);
       });
+  });
+
+  it('Should respond with ALL messages that were previously posted', function() {
+    var stubMsg1 = {
+      username: 'Dylan',
+      message: 'I got coffee'
+    };
+    var stubMsg2 = {
+      username: 'Ilke',
+      message: 'This week rocks!'
+    };
+
+    var req1 = new stubs.request('/classes/messages', 'POST', stubMsg1);
+    var res1 = new stubs.response();
+
+    var req2 = new stubs.request('/classes/messages', 'POST', stubMsg2);
+    var res2 = new stubs.response();
+
+    handler.requestHandler(req1, res1);
+    handler.requestHandler(req2, res2);
+
+    expect(res2._responseCode).to.equal(201);
+
+      // Now if we request the log for that room the messages we posted should be there:
+    req3 = new stubs.request('/classes/messages', 'GET');
+    res3 = new stubs.response();
+
+    handler.requestHandler(req3, res3);
+
+    expect(res3._responseCode).to.equal(200);
+    var messages = JSON.parse(res3._data).results;
+
+    expect(messages.length).to.equal(4);
+    expect(messages[2].username).to.equal('Dylan');
+    expect(messages[2].message).to.equal('I got coffee');
+    expect(messages[3].username).to.equal('Ilke');
+    expect(messages[3].message).to.equal('This week rocks!');
+
+    expect(res3._ended).to.equal(true);
+  });
+  
+  it('Should respond with a roomname if one was provided', function() {
+    var stubMsg = {
+      username: 'Cartman',
+      message: 'How do I reach these kiiiids?',
+      roomname: 'lobby'
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(201);
+
+      // Now if we request the log for that room the message we posted should be there:
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(200);
+    var messages = JSON.parse(res._data).results;
+    expect(messages.length).to.be.above(0);
+    expect(messages[messages.length - 1].roomname).to.equal('lobby');
+    expect(res._ended).to.equal(true);
   });
 
 });

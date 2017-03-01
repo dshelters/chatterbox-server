@@ -5,7 +5,7 @@ var requestHandler = function(request, response) {
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'access-control-allow-headers': 'content-type, accept, X-Parse-Application-Id, X-Parse-REST-API-Key',
+    'access-control-allow-headers': 'content-type, accept',
     'access-control-max-age': 10 // Seconds.
   };
 
@@ -15,7 +15,7 @@ var requestHandler = function(request, response) {
   // declaring some variables
   var statusCode;
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'application/jsonp';
+  headers['Content-Type'] = 'application/json';
   var method = request.method;
   var url = request.url;
   var urlMatch = (url === '/classes/messages' || url === '/classes/room');
@@ -34,41 +34,35 @@ var requestHandler = function(request, response) {
       }
     });
     response.writeHead(statusCode, headers);
-    console.log('results', results);
     response.end(JSON.stringify(results[results.length - 1]));
-  }
 
 
   //GET method
-  if (request.method === 'GET' && urlMatch) {
+  } else if (request.method === 'GET' && urlMatch) {
     statusCode = 200;
     response.writeHead(statusCode, headers);
     var responseBody = {
-      // headers: headers,
       method: method,
       url: url,
       results: results
     };
-    // response.write(JSON.stringify(responseBody));
     response.end(JSON.stringify(responseBody));
-  }
+
+
+  // options
+  } else if (request.method === 'OPTIONS' && urlMatch) {
+    statusCode = 200;
+    response.writeHead(statusCode, headers);
+    console.log('headers', headers);
+    response.end();
 
   // different url
-  if (!urlMatch) {
+  } else {
     statusCode = 404;
     response.writeHead(statusCode, headers);
     response.end();
   }
-
-  // options
-  if (request.method === 'OPTIONS' && urlMatch) {
-    statusCode = 200;
-    response.writeHead(statusCode, headers);
-    response.end();
-  }
-
   
-  // response.end();
 };
 
 
